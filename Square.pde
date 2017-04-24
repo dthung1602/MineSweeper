@@ -17,30 +17,30 @@ class Square {
     this.y = yStart + sqrSize*row;
   }
   
-  void show () {
-    //skip squares at edges
-    if (value == -2) 
-      return;
-    
+  void show () {    
     //draw square
     fill(255);
     rect(x,y,x+sqrSize,y+sqrSize);
     
     //draw content
     if (open) {
-      fill(100,100,100,100);
-      rect(x,y,x+sqrSize,y+sqrSize);
-      if (value == -1)
+      //open a bomb
+      if (value == -1) {
+        game.lose = true;
+        bt[0].content = "PLAY AGAIN";
         fill(255,0,0);
-      else 
+        rect(x,y,x+sqrSize,y+sqrSize);
+        image(bombImg,x,y,sqrSize,sqrSize);
+        return;
+      } else {
+        fill(100,100,100,100);
+        rect(x,y,x+sqrSize,y+sqrSize);
         fill(0);
-    } else {
-      if (flag)
-        fill(0,0,255);
-      else 
-        fill(0);
-    }
-    text(value,x+sqrSize/2,y+sqrSize/2);
+        if (value > 0)
+          text(value,x+10,y+22);
+      }
+    } else if (flag)
+        image(flagImg,x,y,sqrSize,sqrSize);
   }
     
   boolean containPoint (int x, int y) {
@@ -60,13 +60,22 @@ class Square {
        for (int i=0; i<8; i++)
          map.data[row+rowAround[i]][col+colAround[i]].open();
     } else {
-      //mark/unmark a flag
       if (mouseButton == RIGHT) {
-          flag = !flag;
-          if (value == -1 && flag) 
-            game.flagCount += 1;
-          if (value == -1 && !flag) 
-            game.flagCount -= 1;
+        //unmark a flag
+        if (flag) {
+          flag = false;
+          game.flagCount++;
+          if (value == -1) 
+            game.flagCorrect--;
+        //mark a flag
+        } else {
+          if (game.flagCount>0) { // check if player have any flag left
+            flag = true;
+            game.flagCount--;
+            if (value == -1) 
+              game.flagCorrect++;         
+          }
+        }
       }
       //open a square directly
       if (mouseButton == LEFT)
@@ -81,13 +90,12 @@ class Square {
     
     //open square
     open = true;
-    game.openCount += 1;
-    
+    if (value != -1)
+      game.openCount += 1;
+
     //check if open a bomb
-    if (value == -1) { 
-      game.lose = true;
+    if (value == -1)  
       return;
-    }
     
     //continue to expand open if this is a 0 square
     if (value == 0) 
@@ -105,7 +113,7 @@ class Square {
       if (map.data[row+rowAround[i]][col+colAround[i]].flag)
         count++;
         
-    //false if too few or too many flay
+    //false if too few or too many flag
     if (count != value)      
       return false;
       

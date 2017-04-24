@@ -9,14 +9,37 @@ class Map {
     col = c;
     bomb = b;
     xStart = (width - (c+2)*sqrSize)/2;
-    yStart = 100;
-    
-    //create data
+    yStart = 130;
     data = new Square [r+2][c+2];
-    int s = (width - xStart*2) / col;
-    for (int i=0; i<row+2; i++) 
+    game.flagCount = bomb;
+    
+    //fill squares with 0
+    for (int i=0; i<row+2; i++)
       for (int j=0; j<col+2; j++)
-        data[i][j] = new Square(i,j,(int) random(-2,3));
+        data[i][j] = new Square(i,j,0);
+    
+    //create bombs
+    while (b>0) {
+      int i = (int) random(1,row+1);
+      int j = (int) random(1,col+1);
+      if (data[i][j].value == -1)
+        continue;
+      data[i][j] = new Square(i,j,-1);
+      b--;
+    }
+    
+    //put number in data
+    for (int i=1; i<=row; i++)
+      for (int j=1; j<=col; j++) {     
+        Square s = data[i][j];
+        if (s.value==-1)
+          continue;
+        int count = 0;
+        for (int k=0; k<8; k++)
+          if (data[i+s.rowAround[k]][j+s.colAround[k]].value==-1)
+            count++;
+        s.value = count;
+      }
         
     //wrap around data
     for (int i=0; i<row+2; i++) {
@@ -31,8 +54,8 @@ class Map {
   
   void show () {
     fill(255);
-    for (int i=0; i<row+2; i++)
-      for (int j=0; j<col+2; j++)
+    for (int i=1; i<=row; i++)
+      for (int j=1; j<=col; j++)
         data[i][j].show();
   }
 }
